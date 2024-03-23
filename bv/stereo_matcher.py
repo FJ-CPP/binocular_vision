@@ -1,7 +1,62 @@
 import cv2
 import numpy as np
-from .disparity_map import DisparityMap
-from .utils import timecost
+from .utils import timecost, load_pfm, save_pfm
+
+
+class DisparityMap:
+  def __init__(self, data: np.array = None) -> None:
+    """ init method for DisparityMap class
+
+    Args:
+        data (np.array): disparity map data in float32
+    """
+    self._data = data
+
+  def raw(self) -> np.array:
+    """return raw disparity map data
+
+    Returns:
+        np.array: disparity map data
+    """
+    return self._data
+
+  @timecost
+  def norm2int8(self) -> np.array:
+    """ normalize disparity map
+
+    Returns:
+        np.array: normalized disparity map data
+    """
+    return cv2.normalize(self._data,
+                         None,
+                         alpha=0,
+                         beta=255,
+                         norm_type=cv2.NORM_MINMAX,
+                         dtype=cv2.CV_8U)
+
+  @timecost
+  def load_from_pfm(self, pfm_file: str) -> None:
+    """ load disparity map from pfm file
+
+    Inf values in this pfm file will be set to 0.
+
+    Args:
+        pfm_file (str): pfm file path
+    """
+    disp, scale = load_pfm(pfm_file)
+    real_disp = disp * abs(scale)
+    real_disp[np.isinf(real_disp)] = 0
+    self._data = real_disp
+
+  @timecost
+  def save_as_pfm(self, pfm_file: str, scale=1) -> None:
+    """save disparity map as pfm file
+
+    Args:
+        pfm_file (str): pfm file path
+        scale (float, optional): scale. Defaults to 1/16.0.
+    """
+    save_pfm(pfm_file, self._data, scale)
 
 
 class StereoMatcher:
@@ -17,6 +72,21 @@ class StereoMatcher:
                speckle_window_size=0,
                speckle_range=0,
                mode=cv2.STEREO_SGBM_MODE_SGBM):
+    """ init method for StereoMatcher class
+
+    Args:
+        min_disparity (int, optional): minimum disparity. Defaults to 0.
+        num_disparities (int, optional): number of disparities. Defaults to 16.
+        block_size (int, optional): block size. Defaults to 3.
+        p1 (int, optional): p1. Defaults to 0.
+        p2 (int, optional): p2. Defaults to 0.
+        disp12_max_diff (int, optional): disp12_max_diff. Defaults to 0.
+        pre_filter_cap (int, optional): pre_filter_cap. Defaults to 0.
+        uniqueness_ratio (int, optional): uniqueness_ratio. Defaults to 0.
+        speckle_window_size (int, optional): speckle_window_size. Defaults to 0.
+        speckle_range (int, optional): speckle_range. Defaults to 0.
+        mode (int, optional): mode. Defaults to cv2.STEREO_SGBM_MODE_SGBM.
+    """
     self._min_disparity = min_disparity
     self._num_disparities = num_disparities
     self._block_size = block_size
@@ -151,7 +221,7 @@ class StereoMatcher:
 
   @timecost
   def compute_disparity_map(self, img_left, img_right) -> DisparityMap:
-    """compute disparity map from stereo images
+    """ compute disparity map from stereo images
 
     Args:
         img_left (Any): left image

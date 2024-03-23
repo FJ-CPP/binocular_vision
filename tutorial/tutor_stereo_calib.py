@@ -5,12 +5,12 @@ from pathlib import Path
 proj_root = str(Path(__file__).resolve().parent.parent)
 sys.path.append(str(proj_root))
 
-import bv
 import logging
 import cv2
 import numpy as np
 import glob
-import os
+
+import bv
 from common import ensure_path
 
 if __name__ == '__main__':

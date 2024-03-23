@@ -25,21 +25,21 @@ class StereoCalibParams:
     """ init method for StereoCalibParams class
 
     Args:
-        intrins1 (np.ndarray): intrinsic matrix of left camera.
-        dist_coeffs1 (np.ndarray): distortion coefficients of left camera.
-        intrins2 (np.ndarray): intrinsic matrix of right camera.
-        dist_coeffs2 (np.ndarray): distortion coefficients of right camera.
-        R (np.ndarray): rotation matrix between left and right cameras.
-        T (np.ndarray): translation vector between left and right cameras.
-        E (np.ndarray): essential matrix.
-        F (np.ndarray): fundamental matrix.
-        R1 (np.ndarray): rectification matrix for left camera.
-        R2 (np.ndarray): rectification matrix for right camera.
-        P1 (np.ndarray): projection matrix for left camera.
-        P2 (np.ndarray): projection matrix for right camera.
-        Q (np.ndarray): disparity-to-depth mapping matrix.
-        roi1 (tuple): region of interest for left camera.
-        roi2 (tuple): region of interest for right camera.
+        intrins1 (np.ndarray, optional): intrinsic matrix of left camera.
+        dist_coeffs1 (np.ndarray, optional): distortion coefficients of left camera.
+        intrins2 (np.ndarray, optional): intrinsic matrix of right camera.
+        dist_coeffs2 (np.ndarray, optional): distortion coefficients of right camera.
+        R (np.ndarray, optional): rotation matrix between left and right cameras.
+        T (np.ndarray, optional): translation vector between left and right cameras.
+        E (np.ndarray, optional): essential matrix.
+        F (np.ndarray, optional): fundamental matrix.
+        R1 (np.ndarray, optional): rectification matrix for left camera.
+        R2 (np.ndarray, optional): rectification matrix for right camera.
+        P1 (np.ndarray, optional): projection matrix for left camera.
+        P2 (np.ndarray, optional): projection matrix for right camera.
+        Q (np.ndarray, optional): disparity-to-depth mapping matrix.
+        roi1 (tuple, optional): region of interest for left camera.
+        roi2 (tuple, optional): region of interest for right camera.
     """
     self.intrins1 = intrins1
     self.dist_coeffs1 = dist_coeffs1
@@ -58,7 +58,7 @@ class StereoCalibParams:
     self.roi2 = roi2
 
   def save_as_json(self, fpath):
-    """save stereo calibration parameters to json file
+    """ save stereo calibration parameters to json file
 
     Args:
         fpath (str): json file path.
@@ -77,7 +77,7 @@ class StereoCalibParams:
       json.dump(serializable_dict, f, indent=4)
 
   def load_from_json(self, fpath):
-    """load stereo calibration parameters from json file
+    """ load stereo calibration parameters from json file
 
     Args:
         fpath (str): json file path.
@@ -272,7 +272,7 @@ class StereoCalibrator:
     return params, calib_rms, epipolar_err, corners, valid_image_pairs
 
   def compute_rect_maps(self, params: StereoCalibParams, w: int, h: int):
-    """get rectification maps
+    """ get rectification maps
     
     Args:
         params (StereoCalibParams): stereo calibration parameters.
