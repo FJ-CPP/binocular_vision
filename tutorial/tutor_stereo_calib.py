@@ -77,8 +77,9 @@ if __name__ == '__main__':
 
   # rectify images and save to file
   logging.info('rectifying images ...')
-  rect_maps = calibrator.compute_rect_maps(cam_params, images[0][i].shape[1],
-                                           images[0][i].shape[0])
+  rectifier = bv.BinoImageRectifier(images[0][i].shape[1],
+                                    images[0][i].shape[0], cam_params)
+  rect_maps = rectifier.compute_rect_maps()
   for i in range(len(left_images)):
     limage = images[0][i].copy()
     rimage = images[1][i].copy()

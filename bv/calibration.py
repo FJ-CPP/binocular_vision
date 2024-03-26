@@ -270,34 +270,3 @@ class StereoCalibrator:
                                roi1, roi2)
 
     return params, calib_rms, epipolar_err, corners, valid_image_pairs
-
-  def compute_rect_maps(self, params: StereoCalibParams, w: int, h: int):
-    """ get rectification maps
-    
-    Args:
-        params (StereoCalibParams): stereo calibration parameters.
-        w (int): image width.
-        h (int): image height.
-    
-    Returns:
-        list: rectification maps for left and right camera.
-    """
-    R1, R2, P1, P2, Q, roi1, roi2 = cv2.stereoRectify(
-      params.intrins1,
-      params.dist_coeffs1,
-      params.intrins2,
-      params.dist_coeffs2, (w, h),
-      params.R,
-      params.T,
-      flags=cv2.CALIB_ZERO_DISPARITY,
-      alpha=-1)
-
-    rect_maps = [[], []]
-    rect_maps[0] = cv2.initUndistortRectifyMap(params.intrins1,
-                                               params.dist_coeffs1, R1, P1,
-                                               (w, h), cv2.CV_16SC2)
-    rect_maps[1] = cv2.initUndistortRectifyMap(params.intrins2,
-                                               params.dist_coeffs2, R2, P2,
-                                               (w, h), cv2.CV_16SC2)
-
-    return rect_maps
