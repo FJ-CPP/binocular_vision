@@ -235,3 +235,48 @@ class StereoMatcher:
     disparity = self.stereo_matcher.compute(img_left, img_right).astype(
       np.float32) / 16.0
     return DisparityMap(data=disparity)
+
+  @timecost
+  def filter_with_wls(self, left_disparity_map:DisparityMap, img_left,
+                      img_right, wls_lambda=8000, wls_sigma=1.5) -> DisparityMap:
+    """ filter disparity map with wls
+
+    Args:
+        left_disparity_map (DisparityMap): left disparity map
+        img_left (Any): left image
+        img_right (Any): right image
+        wls_lambda (int, optional): lambda param for wls. Defaults to 8000.
+        wls_sigma (float, optional): sigma param for wls. Defaults to 1.5.
+
+    Returns:
+        DisparityMap: filtered disparity map
+    """
+    right_matcher = cv2.ximgproc.createRightMatcher(self.stereo_matcher)
+
+    # divide by 16 to get the raw disparity map
+    right_disparity_map = (
+      right_matcher.compute(img_right, img_left).astype(np.float32) / 16.0)
+    
+    wls_filter = cv2.ximgproc.createDisparityWLSFilter(
+      matcher_left=self.stereo_matcher)
+    wls_filter.setLambda(wls_lambda)
+    wls_filter.setSigmaColor(wls_sigma)
+
+    filtered_left_disparity_map = wls_filter.filter(left_disparity_map.raw(),
+                                                    img_left, None,
+                                                    right_disparity_map)
+    return DisparityMap(data=filtered_left_disparity_map)
+
+  @timecost
+  def filter_with_median(self, disparity_map: DisparityMap, ksize=3) -> DisparityMap:
+    """ filter disparity map with median filter
+
+    Args:
+        disparity_map (DisparityMap): disparity map
+        ksize (int, optional): kernel size. Defaults to 3.
+
+    Returns:
+        DisparityMap: filtered disparity map
+    """
+    print((disparity_map.raw().shape))
+    return DisparityMap(data=cv2.medianBlur(disparity_map.raw(), ksize))

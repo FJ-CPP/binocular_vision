@@ -18,8 +18,8 @@ def MiddleBury_data_loader(data_path):
   Args:
       data_path (str): MiddleBury stereo data path
   """
-  limage = cv2.imread(f'{data_path}/im0.png', cv2.IMREAD_COLOR)
-  rimages = cv2.imread(f'{data_path}/im1.png', cv2.IMREAD_COLOR)
+  limage = cv2.imread(f'{data_path}/im0.png', cv2.IMREAD_GRAYSCALE)
+  rimages = cv2.imread(f'{data_path}/im1.png', cv2.IMREAD_GRAYSCALE)
   calib_file = f'{data_path}/calib.txt'
 
   with open(calib_file, 'r') as f:

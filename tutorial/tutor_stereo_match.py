@@ -31,17 +31,18 @@ if __name__ == '__main__':
   compute disparity map
   """
   logging.info('computing disparity map ...')
-  matcher = bv.StereoMatcher(min_disparity=0,
-                             num_disparities=ndisp,
-                             block_size=3,
-                             p1=8 * 3 * 3**2,
-                             p2=32 * 3 * 3**2,
+  block_size = 3
+  matcher = bv.StereoMatcher(min_disparity=16,
+                             num_disparities=192 - 16,
+                             block_size=block_size,
+                             p1=8 * 3 * block_size**2,
+                             p2=32 * 3 * block_size**2,
                              disp12_max_diff=1,
                              pre_filter_cap=63,
                              uniqueness_ratio=10,
                              speckle_window_size=100,
-                             speckle_range=32,
-                             mode=cv2.STEREO_SGBM_MODE_SGBM)
+                             speckle_range=100,
+                             mode=cv2.STEREO_SGBM_MODE_SGBM_3WAY)
 
   disp_map = matcher.compute_disparity_map(limage, rimage)
   """
@@ -54,3 +55,19 @@ if __name__ == '__main__':
   """
   logging.info('saving disparity map as pfm file ...')
   disp_map.save_as_pfm(f'{output_dir}/disp_map.pfm')
+  """
+  filter disparity map with WLS filter
+  """
+  logging.info('filtering disparity map with WLS filter ...')
+  disp_map_filtered = matcher.filter_with_wls(disp_map, limage, rimage, 8000, 1.5)
+  cv2.imwrite(f'{output_dir}/disp_map_wls_filtered.png', disp_map_filtered.raw())
+  logging.info('saving filtered disparity map as pfm file ...')
+  disp_map_filtered.save_as_pfm(f'{output_dir}/disp_map_wls_filtered.pfm')
+  """
+  filter disparity map with Median filter
+  """
+  logging.info('filtering disparity map with Median filter ...')
+  disp_map_filtered = matcher.filter_with_median(disp_map, 7)
+  cv2.imwrite(f'{output_dir}/disp_map_median_filtered.png', disp_map_filtered.raw())
+  logging.info('saving filtered disparity map as pfm file ...')
+  disp_map_filtered.save_as_pfm(f'{output_dir}/disp_map_median_filtered.pfm')
