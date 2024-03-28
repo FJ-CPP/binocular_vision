@@ -7,8 +7,6 @@ sys.path.append(str(proj_root))
 
 import logging
 import cv2
-import numpy as np
-import os
 
 import bv
 from common import ensure_path, MiddleBury_data_loader
@@ -50,17 +48,16 @@ if __name__ == '__main__':
   """
   logging.info('saving disparity map as png file ...')
   cv2.imwrite(f'{output_dir}/disp_map.png', disp_map.norm2int8())
-  """
-  save disparity map as pfm file
-  """
   logging.info('saving disparity map as pfm file ...')
   disp_map.save_as_pfm(f'{output_dir}/disp_map.pfm')
   """
   filter disparity map with WLS filter
   """
   logging.info('filtering disparity map with WLS filter ...')
-  disp_map_filtered = matcher.filter_with_wls(disp_map, limage, rimage, 8000, 1.5)
-  cv2.imwrite(f'{output_dir}/disp_map_wls_filtered.png', disp_map_filtered.raw())
+  disp_map_filtered = matcher.filter_with_wls(disp_map, limage, rimage, 8000,
+                                              1.5)
+  cv2.imwrite(f'{output_dir}/disp_map_wls_filtered.png',
+              disp_map_filtered.raw())
   logging.info('saving filtered disparity map as pfm file ...')
   disp_map_filtered.save_as_pfm(f'{output_dir}/disp_map_wls_filtered.pfm')
   """
@@ -68,6 +65,7 @@ if __name__ == '__main__':
   """
   logging.info('filtering disparity map with Median filter ...')
   disp_map_filtered = matcher.filter_with_median(disp_map, 7)
-  cv2.imwrite(f'{output_dir}/disp_map_median_filtered.png', disp_map_filtered.raw())
+  cv2.imwrite(f'{output_dir}/disp_map_median_filtered.png',
+              disp_map_filtered.raw())
   logging.info('saving filtered disparity map as pfm file ...')
   disp_map_filtered.save_as_pfm(f'{output_dir}/disp_map_median_filtered.pfm')

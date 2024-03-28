@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+from scipy.ndimage import median_filter
 from .utils import timecost, load_pfm, save_pfm
 
 
@@ -237,8 +238,12 @@ class StereoMatcher:
     return DisparityMap(data=disparity)
 
   @timecost
-  def filter_with_wls(self, left_disparity_map:DisparityMap, img_left,
-                      img_right, wls_lambda=8000, wls_sigma=1.5) -> DisparityMap:
+  def filter_with_wls(self,
+                      left_disparity_map: DisparityMap,
+                      img_left,
+                      img_right,
+                      wls_lambda=8000,
+                      wls_sigma=1.5) -> DisparityMap:
     """ filter disparity map with wls
 
     Args:
@@ -256,7 +261,7 @@ class StereoMatcher:
     # divide by 16 to get the raw disparity map
     right_disparity_map = (
       right_matcher.compute(img_right, img_left).astype(np.float32) / 16.0)
-    
+
     wls_filter = cv2.ximgproc.createDisparityWLSFilter(
       matcher_left=self.stereo_matcher)
     wls_filter.setLambda(wls_lambda)
@@ -268,7 +273,9 @@ class StereoMatcher:
     return DisparityMap(data=filtered_left_disparity_map)
 
   @timecost
-  def filter_with_median(self, disparity_map: DisparityMap, ksize=3) -> DisparityMap:
+  def filter_with_median(self,
+                         disparity_map: DisparityMap,
+                         ksize=3) -> DisparityMap:
     """ filter disparity map with median filter
 
     Args:
@@ -278,5 +285,4 @@ class StereoMatcher:
     Returns:
         DisparityMap: filtered disparity map
     """
-    print((disparity_map.raw().shape))
-    return DisparityMap(data=cv2.medianBlur(disparity_map.raw(), ksize))
+    return DisparityMap(data=median_filter(disparity_map.raw(), ksize))
