@@ -3,3 +3,6 @@ __pycache__
 
 # outputs directory
 *output
+
+# datasets
+data/stereo_match/*

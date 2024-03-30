@@ -12,7 +12,7 @@ Virtual environments such as anaconda is recommended for using bv-toolkits.
 >
 > Note: look up a related tutorial to set up a virtual environment.
 
-Use commands as follows to create your python running environment:
+1. Use commands as follows to create your python running environment:
 
 ```bash
 # make sure you are in the root path of binocular_vision
@@ -28,8 +28,15 @@ conda activate <env_name>
 
 pip install -r .ci/py_requirements_<linux|windows>.txt
 ```
+2. Download needed datasets
+```bash
+# for linux
+download_datasets.sh
 
-To run a tutorial, use command like:
+# for windows
+download_datasets.bat
+```
+3. To run a tutorial, use command like:
 
 ```bash
 cd tutorial
