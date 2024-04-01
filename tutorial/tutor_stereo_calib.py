@@ -48,22 +48,17 @@ if __name__ == '__main__':
     images[1].append(cv2.imread(right_images[i], cv2.IMREAD_COLOR))
 
   logging.info('drawing chessboard corners ...')
-  for i in range(len(left_images)):
+  for i in valid_image_pairs:
     limage = images[0][i].copy()
     rimage = images[1][i].copy()
     limage_gray = cv2.cvtColor(limage, cv2.COLOR_BGR2GRAY)
     rimage_gray = cv2.cvtColor(rimage, cv2.COLOR_BGR2GRAY)
-    ret_l, corners_l = cv2.findChessboardCorners(limage_gray,
-                                                 calibrator.border_size)
-    ret_r, corners_r = cv2.findChessboardCorners(rimage_gray,
-                                                 calibrator.border_size)
-    if ret_l and ret_r:
-      cv2.drawChessboardCorners(limage, calibrator.border_size, corners_l,
-                                ret_l)
-      cv2.drawChessboardCorners(rimage, calibrator.border_size, corners_r,
-                                ret_r)
-      cv2.imwrite(f'{output_dir}/corners_{i}_l.png', limage)
-      cv2.imwrite(f'{output_dir}/corners_{i}_r.png', rimage)
+    cv2.drawChessboardCorners(limage, calibrator.border_size, corners[0][i],
+                              True)
+    cv2.drawChessboardCorners(rimage, calibrator.border_size, corners[1][i],
+                              True)
+    cv2.imwrite(f'{output_dir}/corners_{i}_l.png', limage)
+    cv2.imwrite(f'{output_dir}/corners_{i}_r.png', rimage)
 
   # saving unrectified images
   logging.info('saving unrectified images ...')
