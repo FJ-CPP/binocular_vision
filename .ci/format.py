@@ -4,7 +4,7 @@ import os
 import subprocess
 import argparse
 
-py_sub_folders = ["."]
+py_sub_folders = [".ci", "bv", "tools", "tutorial"]
 
 
 def error(msg=""):

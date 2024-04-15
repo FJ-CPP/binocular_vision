@@ -8,6 +8,17 @@ import cv2
 from common import UIBasePage
 import bv
 
+import sys
+from pathlib import Path
+
+proj_root = str(Path(__file__).resolve().parent.parent.parent)
+sys.path.append(str(proj_root) + '/3rdparties/RAFT-Stereo/core')
+sys.path.append(str(proj_root) + '/3rdparties/RAFT-Stereo/')
+from raft_stereo import RAFTStereo
+from utils.utils import InputPadder
+import torch
+import argparse
+
 
 class StereoEstPage(UIBasePage, Ui_StereoEstPage):
   def __init__(self):
@@ -199,6 +210,73 @@ class StereoEstPage(UIBasePage, Ui_StereoEstPage):
     logging.debug(
       f'[compute_disparity_sgbm] Disparity map shape: {disp_map_gray.shape}')
 
+  def compute_disparity_raft_stereo(self):
+    class RAFTArgs:
+      def __init__(self):
+        self.restore_ckpt = 'raft-models/raftstereo-middlebury.pth'
+        self.save_numpy = False
+        self.mixed_precision = False
+        self.valid_iters = 32
+        self.hidden_dims = [128] * 3
+        self.corr_implementation = "alt"
+        self.shared_backbone = False
+        self.corr_levels = 4
+        self.corr_radius = 4
+        self.n_downsample = 2
+        self.context_norm = "batch"
+        self.slow_fast_gru = False
+        self.n_gru_layers = 3
+
+    args = RAFTArgs()
+    model = torch.nn.DataParallel(RAFTStereo(args), device_ids=[0])
+    model.load_state_dict(torch.load(args.restore_ckpt))
+    model = model.module
+    model.to('cuda')
+    model.eval()
+    with torch.no_grad():
+      if self.rect_maps is None:
+        img = cv2.imread(self.left_images[0], cv2.IMREAD_GRAYSCALE)
+        rectifier = bv.BinoImageRectifier(img.shape[1], img.shape[0],
+                                          self.camera_params)
+        self.rect_maps = rectifier.compute_rect_maps()
+        logging.info(
+          f"[compute_disparity_raft_stereo] Rectification maps computed.")
+
+      limage = cv2.imread(self.left_images[self.cur_img_idx], cv2.IMREAD_COLOR)
+      rimage = cv2.imread(self.right_images[self.cur_img_idx],
+                          cv2.IMREAD_COLOR)
+      limage_rect = cv2.remap(limage, self.rect_maps[0][0],
+                              self.rect_maps[0][1], cv2.INTER_LINEAR)
+      rimage_rect = cv2.remap(rimage, self.rect_maps[1][0],
+                              self.rect_maps[1][1], cv2.INTER_LINEAR)
+      limage_rect = cv2.resize(limage_rect,
+                               dsize=(self.label_est_res.width(),
+                                      self.label_est_res.height()))
+      rimage_rect = cv2.resize(rimage_rect,
+                               dsize=(self.label_est_res.width(),
+                                      self.label_est_res.height()))
+
+      image1 = torch.from_numpy(limage_rect).permute(
+        2, 0, 1).float()[None].to('cuda')
+      image2 = torch.from_numpy(rimage_rect).permute(
+        2, 0, 1).float()[None].to('cuda')
+
+      padder = InputPadder(image1.shape, divis_by=32)
+      image1, image2 = padder.pad(image1, image2)
+
+      _, flow_up = model(image1,
+                         image2,
+                         iters=args.valid_iters,
+                         test_mode=True)
+      flow_up = padder.unpad(flow_up).squeeze()
+      self.cur_disp_map = bv.DisparityMap(
+        data=-flow_up.cpu().numpy().squeeze())
+      disp_map_gray = self.cur_disp_map.norm2int8()
+      disp_map_qpixmap = self.cvimage2qpixmap_gray(disp_map_gray)
+      self.label_est_res.setPixmap(disp_map_qpixmap)
+      logging.debug(
+        f'[compute_disparity_sgbm] Disparity map shape: {disp_map_gray.shape}')
+
   def on_compute_disparity_clicked(self):
     if not self.camera_params:
       self.show_msg_box("Error", "No camera parameters loaded.")
@@ -217,6 +295,8 @@ class StereoEstPage(UIBasePage, Ui_StereoEstPage):
 
     if alg == "SGBM":
       self.compute_disparity_sgbm()
+    elif alg == "RAFT-Stereo":
+      self.compute_disparity_raft_stereo()
     else:
       self.show_msg_box("Error", "Unsupported disparity algorithm.")
       logging.error(
