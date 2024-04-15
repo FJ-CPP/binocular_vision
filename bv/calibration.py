@@ -57,6 +57,24 @@ class StereoCalibParams:
     self.roi1 = roi1
     self.roi2 = roi2
 
+  def save_as_str(self):
+    """ save stereo calibration parameters to string
+
+    Returns:
+        str: stereo calibration parameters string.
+    """
+    serializable_dict = {}
+    for k, v in self.__dict__.items():
+      if isinstance(v, np.ndarray):
+        serializable_dict[k] = v.tolist()
+      elif isinstance(v, tuple):
+        serializable_dict[k] = v
+      else:
+        raise ValueError(
+          'invalid stereo calibration parameters for serialization!')
+
+    return json.dumps(serializable_dict, indent=4)
+
   def save_as_json(self, fpath):
     """ save stereo calibration parameters to json file
 
@@ -90,8 +108,8 @@ class StereoCalibParams:
         else:
           setattr(self, key, value)
 
-      for k, v in self.__dict__.items():
-        print(k, v)
+      # for k, v in self.__dict__.items():
+      #   print(k, v)
 
 
 class StereoCalibrator:
@@ -106,18 +124,19 @@ class StereoCalibrator:
     self.square_size = square_size
 
   @timecost
-  def stereo_calib(
-      self,
-      left_images,
-      right_images,
-      check_quality=False
-  ) -> tuple[StereoCalibParams, float, float, list, list]:
+  def stereo_calib(self,
+                   left_images,
+                   right_images,
+                   check_quality=False,
+                   image_resize=None
+                   ) -> tuple[StereoCalibParams, float, float, list, list]:
     """ stereo calibration
 
     Args:
         left_images (list(str)): path list of left images.
         right_images (list(str)): path list of right images.
         check_quality (bool, optional): need check stereo calibration quality. Defaults to False.
+        image_resize (tuple, optional): image resize shape. Defaults to None.
 
     Returns:
         tuple[StereoCalibParams, float, float, list, list]: stereo calibration parameters, 
@@ -148,6 +167,9 @@ class StereoCalibrator:
     for i in range(len(left_images)):
       limage = cv2.imread(left_images[i], cv2.IMREAD_GRAYSCALE)
       rimage = cv2.imread(right_images[i], cv2.IMREAD_GRAYSCALE)
+      if image_resize is not None:
+        limage = cv2.resize(limage, image_resize)
+        rimage = cv2.resize(rimage, image_resize)
 
       if limage is None:
         raise ValueError(f'failed to load image {left_images[i]}')
@@ -189,6 +211,10 @@ class StereoCalibrator:
       corners[0].append(lcorners)
       corners[1].append(rcorners)
       valid_image_pairs.append(i)
+
+    if len(valid_image_pairs) < 2:
+      raise ValueError(
+        'insufficient valid image pairs for stereo calibration!')
     """
     Stereo calibration
     """
