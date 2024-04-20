@@ -36,7 +36,7 @@ class DisparityMap:
                          dtype=cv2.CV_8U)
 
   @timecost
-  def load_from_pfm(self, pfm_file: str) -> None:
+  def load_from_pfm(self, pfm_file: str, need_flipud=False) -> None:
     """ load disparity map from pfm file
 
     Inf values in this pfm file will be set to 0.
@@ -45,9 +45,11 @@ class DisparityMap:
         pfm_file (str): pfm file path
     """
     disp, scale = load_pfm(pfm_file)
-    real_disp = disp * abs(scale)
+    real_disp = disp
     real_disp[np.isinf(real_disp)] = 0
     self._data = real_disp
+    if need_flipud:
+      self._data = np.flipud(self._data)
 
   @timecost
   def save_as_pfm(self, pfm_file: str, scale=1) -> None:

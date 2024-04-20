@@ -1,5 +1,6 @@
 import os
 import cv2
+import bv
 
 
 def ensure_path(path):
@@ -18,8 +19,8 @@ def MiddleBury_data_loader(data_path):
   Args:
       data_path (str): MiddleBury stereo data path
   """
-  limage = cv2.imread(f'{data_path}/im0.png', cv2.IMREAD_GRAYSCALE)
-  rimages = cv2.imread(f'{data_path}/im1.png', cv2.IMREAD_GRAYSCALE)
+  limage = cv2.imread(f'{data_path}/im0.png', cv2.IMREAD_COLOR)
+  rimages = cv2.imread(f'{data_path}/im1.png', cv2.IMREAD_COLOR)
   calib_file = f'{data_path}/calib.txt'
 
   with open(calib_file, 'r') as f:
@@ -32,4 +33,7 @@ def MiddleBury_data_loader(data_path):
     vmin = int(lines[7].split('=')[1])
     vmax = int(lines[8].split('=')[1])
 
-  return limage, rimages, intrin1, intrin2, doffs, baseline, ndisp, vmin, vmax
+  disp_gt_left = bv.DisparityMap()
+  disp_gt_left.load_from_pfm(f'{data_path}/disp0.pfm', True)
+
+  return limage, rimages, disp_gt_left, intrin1, intrin2, doffs, baseline, ndisp, vmin, vmax
