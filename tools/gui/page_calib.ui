@@ -293,7 +293,7 @@
             </font>
            </property>
            <property name="text">
-            <string>Calid RMS</string>
+            <string>Calib RMS</string>
            </property>
           </widget>
          </item>
@@ -347,18 +347,6 @@ p, li { white-space: pre-wrap; }
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_2">
          <item>
-          <widget class="QPushButton" name="button_prev_image">
-           <property name="font">
-            <font>
-             <pointsize>14</pointsize>
-            </font>
-           </property>
-           <property name="text">
-            <string> Next Image </string>
-           </property>
-          </widget>
-         </item>
-         <item>
           <widget class="QPushButton" name="button_next_image">
            <property name="font">
             <font>
@@ -367,6 +355,18 @@ p, li { white-space: pre-wrap; }
            </property>
            <property name="text">
             <string> Prev Image </string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="button_prev_image">
+           <property name="font">
+            <font>
+             <pointsize>14</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string> Next Image </string>
            </property>
           </widget>
          </item>

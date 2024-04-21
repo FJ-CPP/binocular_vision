@@ -19,7 +19,7 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>Stereo Calibration Mode</string>
+   <string>Stereo Estimation Mode</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="1">

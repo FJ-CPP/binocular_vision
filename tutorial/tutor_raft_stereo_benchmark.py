@@ -36,21 +36,20 @@ def cal_error(disp_gt, disp, extra_mask=None):
 
 class RAFTArgs:
   def __init__(self):
-    # self.restore_ckpt = os.path.join(proj_root, 'tools/gui/raft-models/raftstereo-middlebury.pth')
     self.restore_ckpt = os.path.join(
-      proj_root, 'tools/gui/raft-models/raftstereo-eth3d.pth')
+      proj_root, 'tools/gui/raft-models/raftstereo-realtime.pth')
     self.save_numpy = False
-    self.mixed_precision = False
-    self.valid_iters = 32
+    self.mixed_precision = True
+    self.valid_iters = 7
     self.hidden_dims = [128] * 3
-    self.corr_implementation = "alt"
-    self.shared_backbone = False
+    self.corr_implementation = "reg_cuda"
+    self.shared_backbone = True
     self.corr_levels = 4
     self.corr_radius = 4
-    self.n_downsample = 2
+    self.n_downsample = 3
     self.context_norm = "batch"
-    self.slow_fast_gru = False
-    self.n_gru_layers = 3
+    self.slow_fast_gru = True
+    self.n_gru_layers = 2
 
 
 if __name__ == '__main__':
