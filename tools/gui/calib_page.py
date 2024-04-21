@@ -9,7 +9,9 @@ import cv2
 from common import UIBasePage
 from ui_calib_page import Ui_StereoCalibPage
 import bv
-import json
+from pathlib import Path
+
+proj_root = str(Path(__file__).resolve().parent.parent.parent)
 
 
 class StereoCalibPage(UIBasePage, Ui_StereoCalibPage):
@@ -91,35 +93,33 @@ class StereoCalibPage(UIBasePage, Ui_StereoCalibPage):
                           cv2.IMREAD_GRAYSCALE)
     right_img = cv2.imread(self.right_images[self.cur_img_idx],
                            cv2.IMREAD_GRAYSCALE)
-    # resize images to fit the label
-    left_img = cv2.resize(
-      left_img,
-      (self.label_left_image.width(), self.label_left_image.height()))
-    right_img = cv2.resize(
-      right_img,
-      (self.label_right_image.width(), self.label_right_image.height()))
-    l2show = self.cvimage2qpixmap_gray(left_img)
-    r2show = self.cvimage2qpixmap_gray(right_img)
-
     if self.display_calib_res and self.prev_corners:
       if self.cur_img_idx in self.prev_valid_image_pairs:
-        logging.debug(
-          f'left image corners: {self.prev_corners[0][self.cur_img_idx]}')
-        logging.debug(
-          f'right image corners: {self.prev_corners[1][self.cur_img_idx]}')
         left_img = cv2.cvtColor(left_img, cv2.COLOR_GRAY2BGR)
         right_img = cv2.cvtColor(right_img, cv2.COLOR_GRAY2BGR)
         cv2.drawChessboardCorners(left_img, self.prev_chessboard_size,
                                   self.prev_corners[0][self.cur_img_idx], True)
         cv2.drawChessboardCorners(right_img, self.prev_chessboard_size,
                                   self.prev_corners[1][self.cur_img_idx], True)
-        l2show = self.cv2image2qpixmap_rgb(left_img)
-        r2show = self.cv2image2qpixmap_rgb(right_img)
       else:
         # display raw images if no corners found
         self.show_msg_box(
           "Warning",
           f"No corners found for image {self.left_images[self.cur_img_idx]}")
+
+    left_img = cv2.resize(
+      left_img,
+      (self.label_left_image.width(), self.label_left_image.height()))
+    right_img = cv2.resize(
+      right_img,
+      (self.label_right_image.width(), self.label_right_image.height()))
+
+    if self.display_calib_res and self.prev_corners and self.cur_img_idx in self.prev_valid_image_pairs:
+      l2show = self.cvimage2qpixmap_rgb(left_img)
+      r2show = self.cvimage2qpixmap_rgb(right_img)
+    else:
+      l2show = self.cvimage2qpixmap_gray(left_img)
+      r2show = self.cvimage2qpixmap_gray(right_img)
 
     self.label_left_image.setPixmap(l2show)
     self.label_right_image.setPixmap(r2show)
@@ -134,7 +134,8 @@ class StereoCalibPage(UIBasePage, Ui_StereoCalibPage):
         " 'left_*.jpg' and 'right_*.jpg' respectively, id from 0 to xxx.\n"
         ".png images are also supported.")
 
-    dir = QFileDialog.getExistingDirectory(self, "Select Directory", ".")
+    dir = QFileDialog.getExistingDirectory(self, "Select Directory",
+                                           f"{proj_root}/data")
 
     if dir:
       logging.debug(f"[on_load_images_clicked] Selected directory: {dir}")
@@ -185,11 +186,7 @@ class StereoCalibPage(UIBasePage, Ui_StereoCalibPage):
                                                     chessboard_h),
                                        square_size=grid_size)
       cam_params, calib_rms, epipolar_err, corners, valid_image_pairs = calibrator.stereo_calib(
-        self.left_images,
-        self.right_images,
-        True,
-        image_resize=(self.label_left_image.width(),
-                      self.label_left_image.height()))
+        self.left_images, self.right_images, True)
     except Exception as e:
       self.show_msg_box("Error", f"Error occurred during calibration: {e}")
       logging.error(

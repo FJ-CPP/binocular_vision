@@ -55,7 +55,7 @@ class UIBasePage(QtWidgets.QWidget):
     q_img = QImage(cv_img.data, w, h, bytes_per_line, QImage.Format_Grayscale8)
     return QPixmap(q_img)
 
-  def cv2image2qpixmap_rgb(self, cv_img):
+  def cvimage2qpixmap_rgb(self, cv_img):
     h, w, c = cv_img.shape
     bytes_per_line = w * c
     q_img = QImage(cv_img.data, w, h, bytes_per_line, QImage.Format_RGB888)

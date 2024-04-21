@@ -23,7 +23,7 @@ if __name__ == '__main__':
   load stereo image pair and calibration data
   """
   logging.info('loading stereo image pair and calibration data ...')
-  limage, rimage, intrin1, intrin2, doffs, baseline, ndisp, vmin, vmax = MiddleBury_data_loader(
+  limage, rimage, disp_gt_left, intrin1, intrin2, doffs, baseline, ndisp, vmin, vmax = MiddleBury_data_loader(
     f'{proj_root}/data/MiddleBury_2021/artroom1')
   """
   compute disparity map

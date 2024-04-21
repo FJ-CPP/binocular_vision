@@ -10,6 +10,7 @@ import bv
 
 import sys
 from pathlib import Path
+import matplotlib.pyplot as plt
 
 proj_root = str(Path(__file__).resolve().parent.parent.parent)
 sys.path.append(str(proj_root) + '/3rdparties/RAFT-Stereo/core')
@@ -33,6 +34,7 @@ class StereoEstPage(UIBasePage, Ui_StereoEstPage):
     self.rect_maps = None
     self.sgbm_matcher = None
     self.cur_disp_map = None
+    self.cur_whole_disp_map = None
     self.min_disp = 0
 
   def init_ui(self):
@@ -128,7 +130,8 @@ class StereoEstPage(UIBasePage, Ui_StereoEstPage):
         " 'left_*.jpg' and 'right_*.jpg' respectively, id from 0 to xxx.\n"
         ".png images are also supported.")
 
-    dir = QFileDialog.getExistingDirectory(self, "Select Directory", ".")
+    dir = QFileDialog.getExistingDirectory(self, "Select Directory",
+                                           f"{proj_root}/data")
 
     if dir:
       logging.debug(f"[on_load_images_clicked] Selected directory: {dir}")
@@ -149,7 +152,7 @@ class StereoEstPage(UIBasePage, Ui_StereoEstPage):
   def on_load_camera_params_clicked(self):
     cam_file = QFileDialog.getOpenFileName(self,
                                            "Select Camera Parameters File",
-                                           ".")
+                                           f"{proj_root}/data")
 
     try:
       if cam_file:
@@ -202,30 +205,32 @@ class StereoEstPage(UIBasePage, Ui_StereoEstPage):
                                                        rimage_rect)
     disp_map_wls = self.sgbm_matcher.filter_with_wls(disp_map, limage_rect,
                                                      rimage_rect, 8000, 1.5)
-    self.cur_disp_map = disp_map_wls
+    self.cur_whole_disp_map = disp_map_wls
+    resized_disp_map_wls = bv.DisparityMap(
+      cv2.resize(disp_map_wls.raw(),
+                 (self.label_est_res.width(), self.label_est_res.height())))
+    self.cur_disp_map = resized_disp_map_wls
     logging.info(f"[compute_disparity_sgbm] Disparity map computed.")
-    disp_map_gray = self.cur_disp_map.norm2int8()
-    disp_map_qpixmap = self.cvimage2qpixmap_gray(disp_map_gray)
+    disp_map_qpixmap = self.cvimage2qpixmap_rgb(
+      self.cur_disp_map.trans2color())
     self.label_est_res.setPixmap(disp_map_qpixmap)
-    logging.debug(
-      f'[compute_disparity_sgbm] Disparity map shape: {disp_map_gray.shape}')
 
   def compute_disparity_raft_stereo(self):
     class RAFTArgs:
       def __init__(self):
-        self.restore_ckpt = 'raft-models/raftstereo-middlebury.pth'
+        self.restore_ckpt = 'raft-models/raftstereo-realtime.pth'
         self.save_numpy = False
-        self.mixed_precision = False
-        self.valid_iters = 32
+        self.mixed_precision = True
+        self.valid_iters = 7
         self.hidden_dims = [128] * 3
-        self.corr_implementation = "alt"
-        self.shared_backbone = False
+        self.corr_implementation = "reg_cuda"
+        self.shared_backbone = True
         self.corr_levels = 4
         self.corr_radius = 4
-        self.n_downsample = 2
+        self.n_downsample = 3
         self.context_norm = "batch"
-        self.slow_fast_gru = False
-        self.n_gru_layers = 3
+        self.slow_fast_gru = True
+        self.n_gru_layers = 2
 
     args = RAFTArgs()
     model = torch.nn.DataParallel(RAFTStereo(args), device_ids=[0])
@@ -242,19 +247,17 @@ class StereoEstPage(UIBasePage, Ui_StereoEstPage):
         logging.info(
           f"[compute_disparity_raft_stereo] Rectification maps computed.")
 
-      limage = cv2.imread(self.left_images[self.cur_img_idx], cv2.IMREAD_COLOR)
+      limage = cv2.imread(self.left_images[self.cur_img_idx],
+                          cv2.IMREAD_GRAYSCALE)
       rimage = cv2.imread(self.right_images[self.cur_img_idx],
-                          cv2.IMREAD_COLOR)
+                          cv2.IMREAD_GRAYSCALE)
       limage_rect = cv2.remap(limage, self.rect_maps[0][0],
                               self.rect_maps[0][1], cv2.INTER_LINEAR)
       rimage_rect = cv2.remap(rimage, self.rect_maps[1][0],
                               self.rect_maps[1][1], cv2.INTER_LINEAR)
-      limage_rect = cv2.resize(limage_rect,
-                               dsize=(self.label_est_res.width(),
-                                      self.label_est_res.height()))
-      rimage_rect = cv2.resize(rimage_rect,
-                               dsize=(self.label_est_res.width(),
-                                      self.label_est_res.height()))
+
+      limage_rect = cv2.cvtColor(limage_rect, cv2.COLOR_GRAY2RGB)
+      rimage_rect = cv2.cvtColor(rimage_rect, cv2.COLOR_GRAY2RGB)
 
       image1 = torch.from_numpy(limage_rect).permute(
         2, 0, 1).float()[None].to('cuda')
@@ -269,13 +272,14 @@ class StereoEstPage(UIBasePage, Ui_StereoEstPage):
                          iters=args.valid_iters,
                          test_mode=True)
       flow_up = padder.unpad(flow_up).squeeze()
+      self.cur_whole_disp_map = bv.DisparityMap(
+        -flow_up.cpu().numpy().squeeze())
       self.cur_disp_map = bv.DisparityMap(
-        data=-flow_up.cpu().numpy().squeeze())
-      disp_map_gray = self.cur_disp_map.norm2int8()
-      disp_map_qpixmap = self.cvimage2qpixmap_gray(disp_map_gray)
+        cv2.resize(-flow_up.cpu().numpy().squeeze(),
+                   (self.label_est_res.width(), self.label_est_res.height())))
+      disp_map_qpixmap = self.cvimage2qpixmap_rgb(
+        self.cur_disp_map.trans2color())
       self.label_est_res.setPixmap(disp_map_qpixmap)
-      logging.debug(
-        f'[compute_disparity_sgbm] Disparity map shape: {disp_map_gray.shape}')
 
   def on_compute_disparity_clicked(self):
     if not self.camera_params:
@@ -312,6 +316,11 @@ class StereoEstPage(UIBasePage, Ui_StereoEstPage):
     ) or y < 0 or y >= self.label_est_res.pixmap().height():
       return
 
+    img = self.cur_disp_map.trans2color()
+    cv2.circle(img, (x, y), 4, (255, 255, 255), 1)
+    disp_map_qpixmap = self.cvimage2qpixmap_rgb(img)
+    self.label_est_res.setPixmap(disp_map_qpixmap)
+
     self.line_coordinate.setText(f"({y}, {x})")
 
     disp = self.cur_disp_map.raw()[y, x]
@@ -342,9 +351,11 @@ class StereoEstPage(UIBasePage, Ui_StereoEstPage):
       return
 
     try:
-      cv2.imwrite(os.path.join(output_dir, "disp_map.png"),
-                  self.cur_disp_map.norm2int8())
-      self.cur_disp_map.save_as_pfm(os.path.join(output_dir, "disp_map.pfm"))
+      cv2.imwrite(
+        os.path.join(output_dir, "disp_map.png"),
+        cv2.cvtColor(self.cur_whole_disp_map.trans2color(), cv2.COLOR_RGB2BGR))
+      self.cur_whole_disp_map.save_as_pfm(
+        os.path.join(output_dir, "disp_map.pfm"))
       logging.info(
         f"[on_save_results_clicked] Disparity map saved to {output_dir}.")
     except Exception as e:

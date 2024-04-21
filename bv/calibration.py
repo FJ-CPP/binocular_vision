@@ -2,6 +2,7 @@ import json
 import numpy as np
 import cv2
 import logging
+from typing import Tuple, List
 from .utils import timecost
 
 
@@ -124,19 +125,18 @@ class StereoCalibrator:
     self.square_size = square_size
 
   @timecost
-  def stereo_calib(self,
-                   left_images,
-                   right_images,
-                   check_quality=False,
-                   image_resize=None
-                   ) -> tuple[StereoCalibParams, float, float, list, list]:
+  def stereo_calib(
+      self,
+      left_images,
+      right_images,
+      check_quality=False
+  ) -> Tuple[StereoCalibParams, float, float, List, List]:
     """ stereo calibration
 
     Args:
         left_images (list(str)): path list of left images.
         right_images (list(str)): path list of right images.
         check_quality (bool, optional): need check stereo calibration quality. Defaults to False.
-        image_resize (tuple, optional): image resize shape. Defaults to None.
 
     Returns:
         tuple[StereoCalibParams, float, float, list, list]: stereo calibration parameters, 
@@ -152,7 +152,6 @@ class StereoCalibrator:
     dist_coeffs = [[], []]
     calib_rms = None
     epipolar_err = None
-    rect_maps = [[], []]
     R = None
     T = None
     E = None
@@ -167,9 +166,6 @@ class StereoCalibrator:
     for i in range(len(left_images)):
       limage = cv2.imread(left_images[i], cv2.IMREAD_GRAYSCALE)
       rimage = cv2.imread(right_images[i], cv2.IMREAD_GRAYSCALE)
-      if image_resize is not None:
-        limage = cv2.resize(limage, image_resize)
-        rimage = cv2.resize(rimage, image_resize)
 
       if limage is None:
         raise ValueError(f'failed to load image {left_images[i]}')

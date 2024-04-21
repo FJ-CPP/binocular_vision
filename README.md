@@ -17,35 +17,31 @@ Virtual environments such as anaconda is recommended for using bv-toolkits.
 ```bash
 # make sure you are in the root path of binocular_vision
 
-# <env_name> should be replaced with your preferred name
-# <linux|windows> should be chosen for your platform
-
 conda init # (if needed)
 
-conda create --name <env_name> --file .ci/conda_env_<linux|windows>.txt
+conda env create -f .ci/conda_env_linux.yaml
 
-conda activate <env_name>
+conda activate bv
 
-pip install -r .ci/py_requirements_<linux|windows>.txt
+pip install -r .ci/py_requirements_linux.txt
+
+# for raft-stereo, CUDA 11.3 is needed
+
+cd 3rdparties/RAFT-Stereo/sampler
+
+python setup.py install
 ```
 2. Download needed datasets
 ```bash
 # for linux
 download_datasets.sh
-
-# for windows
-download_datasets.bat
 ```
 3. To run a tutorial, use command like:
 
 ```bash
 cd tutorial
 
-# linux
 ./tutor_stereo_calib.py
-
-# windows
-python3.exe ./tutor_stereo_calib.py
 ```
 
 
@@ -58,8 +54,8 @@ If any new python module is added to this project, use command as follows to upd
 
 ```bash
 # for conda
-conda list --export > .ci/conda_env_<linux|windows>.txt
+conda env export > .ci/conda_env_linux.yaml
 
 # for pip
-pip freeze > .ci/py_requirements_<linux|windows>.txt
+pip freeze > .ci/py_requirements_linux.txt
 ```
