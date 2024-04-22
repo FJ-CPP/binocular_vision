@@ -10,7 +10,6 @@ import bv
 
 import sys
 from pathlib import Path
-import matplotlib.pyplot as plt
 
 proj_root = str(Path(__file__).resolve().parent.parent.parent)
 sys.path.append(str(proj_root) + '/3rdparties/RAFT-Stereo/core')
@@ -18,7 +17,7 @@ sys.path.append(str(proj_root) + '/3rdparties/RAFT-Stereo/')
 from raft_stereo import RAFTStereo
 from utils.utils import InputPadder
 import torch
-import argparse
+import time
 
 
 class StereoEstPage(UIBasePage, Ui_StereoEstPage):
@@ -331,7 +330,9 @@ class StereoEstPage(UIBasePage, Ui_StereoEstPage):
 
     b = self.spin_box_baseline.value()
     fx = self.camera_params.intrins1[0, 0]
-    depth = round(b * fx / disp, 3)
+    cx1 = self.camera_params.intrins1[0, 2]
+    cx2 = self.camera_params.intrins2[0, 2]
+    depth = round(b * fx / (disp + cx2 - cx1), 3)
     logging.debug(
       f"[label_est_res_mouse_move_event] fx: {fx}, baseline: {b}, disparity: {disp}, depth: {depth}"
     )
@@ -351,11 +352,12 @@ class StereoEstPage(UIBasePage, Ui_StereoEstPage):
       return
 
     try:
+      t = time.time()
       cv2.imwrite(
-        os.path.join(output_dir, "disp_map.png"),
+        os.path.join(output_dir, f"disp_map_{t}.png"),
         cv2.cvtColor(self.cur_whole_disp_map.trans2color(), cv2.COLOR_RGB2BGR))
       self.cur_whole_disp_map.save_as_pfm(
-        os.path.join(output_dir, "disp_map.pfm"))
+        os.path.join(output_dir, f"disp_map_{t}.pfm"))
       logging.info(
         f"[on_save_results_clicked] Disparity map saved to {output_dir}.")
     except Exception as e:
