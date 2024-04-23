@@ -19,13 +19,19 @@ Virtual environments such as anaconda is recommended for using bv-toolkits.
 
 conda init # (if needed)
 
+# linux
 conda env create -f .ci/conda_env_linux.yaml
+# windows
+conda env create -f .ci/conda_env_windows.yaml
 
 conda activate bv
 
 pip install -r .ci/py_requirements_linux.txt
 
-# for raft-stereo, CUDA 11.3 is needed
+# for raft-stereo on ubuntu, CUDA 11.3 is needed
+# for raft-stereo on windows, CUDA 12.1 is needed
+# like: pip install torch==2.2.2+cu121 -f https://download.pytorch.org/whl/torch_stable.html
+# other CUDA version may still work, have a try ~
 
 cd 3rdparties/RAFT-Stereo/sampler
 
@@ -54,8 +60,14 @@ If any new python module is added to this project, use command as follows to upd
 
 ```bash
 # for conda
+# linux
 conda env export > .ci/conda_env_linux.yaml
+# windows
+conda env export > .ci/conda_env_windows.yaml
 
 # for pip
+# linux
 pip freeze > .ci/py_requirements_linux.txt
+# windows
+pip freeze > .ci/py_requirements_windows.txt
 ```
