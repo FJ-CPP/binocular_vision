@@ -51,6 +51,7 @@ class StereoEstPage(UIBasePage, Ui_StereoEstPage):
     self.button_compute.clicked.connect(self.on_compute_disparity_clicked)
     self.label_est_res.mouseMoveEvent = self.label_est_res_mouse_move_event
     self.button_save_results.clicked.connect(self.on_save_results_clicked)
+    self.line_coordinate.textChanged.connect(self.line_coordinate_text_changed)
 
   def closeEvent(self, event):
     self.close_signal.emit()
@@ -151,15 +152,18 @@ class StereoEstPage(UIBasePage, Ui_StereoEstPage):
   def on_load_camera_params_clicked(self):
     cam_file = QFileDialog.getOpenFileName(self,
                                            "Select Camera Parameters File",
-                                           f"{proj_root}/data")
+                                           f"{proj_root}/data",
+                                           "JSON Files (*.json)")
 
     try:
-      if cam_file:
+      if cam_file and cam_file[0]:
         cam_file = cam_file[0]
         logging.debug(
           f"[on_load_camera_params_clicked] Selected camera file: {cam_file}")
-        self.camera_params = bv.StereoCalibParams()
-        self.camera_params.load_from_json(cam_file)
+        camera_params = bv.StereoCalibParams()
+        camera_params.load_from_json(cam_file)
+        # ensure no error occurs before setting the camera params
+        self.camera_params = camera_params
         self.rect_maps = None
       else:
         self.show_msg_box("Error", "No valid camera parameters file selected.")
@@ -305,6 +309,23 @@ class StereoEstPage(UIBasePage, Ui_StereoEstPage):
       logging.error(
         "[on_compute_disparity_clicked] Unsupported disparity algorithm.")
 
+  def draw_circle_on_disp_map(self, x, y):
+    img = self.cur_disp_map.trans2color()
+
+    if x is not None and y is not None:
+      cv2.circle(img, (x, y), 4, (255, 255, 255), 1)
+
+    disp_map_qpixmap = self.cvimage2qpixmap_rgb(img)
+    self.label_est_res.setPixmap(disp_map_qpixmap)
+
+  def compute_depth(self, disp):
+    b = self.spin_box_baseline.value()
+    fx = self.camera_params.intrins1[0, 0]
+    cx1 = self.camera_params.intrins1[0, 2]
+    cx2 = self.camera_params.intrins2[0, 2]
+    depth = round(b * fx / (disp + cx2 - cx1), 3)
+    return depth
+
   def label_est_res_mouse_move_event(self, event):
     if not self.label_est_res.pixmap():
       return
@@ -315,12 +336,9 @@ class StereoEstPage(UIBasePage, Ui_StereoEstPage):
     ) or y < 0 or y >= self.label_est_res.pixmap().height():
       return
 
-    img = self.cur_disp_map.trans2color()
-    cv2.circle(img, (x, y), 4, (255, 255, 255), 1)
-    disp_map_qpixmap = self.cvimage2qpixmap_rgb(img)
-    self.label_est_res.setPixmap(disp_map_qpixmap)
+    self.draw_circle_on_disp_map(x, y)
 
-    self.line_coordinate.setText(f"({y}, {x})")
+    self.line_coordinate.setText(f"{x},{y}")
 
     disp = self.cur_disp_map.raw()[y, x]
     if disp == (self.min_disp - 1) * 16:
@@ -328,15 +346,7 @@ class StereoEstPage(UIBasePage, Ui_StereoEstPage):
       self.line_depth.setText("N/A")
       return
 
-    b = self.spin_box_baseline.value()
-    fx = self.camera_params.intrins1[0, 0]
-    cx1 = self.camera_params.intrins1[0, 2]
-    cx2 = self.camera_params.intrins2[0, 2]
-    depth = round(b * fx / (disp + cx2 - cx1), 3)
-    logging.debug(
-      f"[label_est_res_mouse_move_event] fx: {fx}, baseline: {b}, disparity: {disp}, depth: {depth}"
-    )
-
+    depth = self.compute_depth(disp)
     self.line_disparity.setText(str(disp))
     self.line_depth.setText(str(depth))
 
@@ -364,3 +374,50 @@ class StereoEstPage(UIBasePage, Ui_StereoEstPage):
       self.show_msg_box("Error", f"Error saving disparity map: {e}")
       logging.error(
         f"[on_save_results_clicked] Error saving disparity map: {e}")
+
+  def clear_line_coordinate(self):
+    self.line_coordinate.setText("")
+
+  def line_coordinate_text_changed(self):
+    if self.line_coordinate.text() == "":
+      return
+
+    if self.cur_disp_map is None:
+      logging.error(
+        "[line_coordinate_text_changed] No disparity map computed.")
+      return
+
+    try:
+      x, y = self.line_coordinate.text().split(',')
+      x = int(x.strip())
+      y = int(y.strip())
+    except Exception as e:
+      logging.error(
+        f"[line_coordinate_text_changed] Error parsing coordinate: {e}")
+      return
+
+    x_limit, y_limit = self.cur_disp_map.raw().shape[::-1]
+    logging.debug(
+      f"[line_coordinate_text_changed] x: {x}, y: {y}, disp_shape: {(y_limit, x_limit)}"
+    )
+
+    if x < 0 or x >= x_limit or y < 0 or y >= y_limit:
+      logging.error("[line_coordinate_text_changed] Coordinate out of range.")
+      self.line_disparity.setText("N/A")
+      self.line_depth.setText("N/A")
+      self.draw_circle_on_disp_map(None, None)
+      return
+
+    disp = self.cur_disp_map.raw()[y, x]
+    if disp == (self.min_disp - 1) * 16:
+      logging.error("[line_coordinate_text_changed] Disparity out of range.")
+      self.line_disparity.setText("N/A")
+      self.line_depth.setText("N/A")
+      self.draw_circle_on_disp_map(None, None)
+      return
+
+    self.draw_circle_on_disp_map(x, y)
+
+    depth = self.compute_depth(disp)
+    self.line_disparity.setText(str(disp))
+    self.line_depth.setText(str(depth))

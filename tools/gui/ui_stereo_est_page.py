@@ -60,7 +60,7 @@ class Ui_StereoEstPage(object):
     self.formLayout_3.setWidget(3, QtWidgets.QFormLayout.LabelRole,
                                 self.label_5)
     self.line_coordinate = QtWidgets.QLineEdit(StereoEstPage)
-    self.line_coordinate.setReadOnly(True)
+    self.line_coordinate.setReadOnly(False)
     self.line_coordinate.setObjectName("line_coordinate")
     self.formLayout_3.setWidget(1, QtWidgets.QFormLayout.FieldRole,
                                 self.line_coordinate)
@@ -183,7 +183,7 @@ class Ui_StereoEstPage(object):
     self.label_3.setText(_translate("StereoEstPage", "Baseline(cm)"))
     self.label.setText(_translate("StereoEstPage", "Coordinate"))
     self.label_4.setText(_translate("StereoEstPage", "Disparity"))
-    self.label_5.setText(_translate("StereoEstPage", "Depth"))
+    self.label_5.setText(_translate("StereoEstPage", "Depth(cm)"))
     self.button_prev_image.setText(_translate("StereoEstPage", "Prev Image"))
     self.button_next_image.setText(_translate("StereoEstPage", "Next Image"))
     self.button_load_images.setText(_translate("StereoEstPage", "Load Images"))

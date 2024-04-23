@@ -177,18 +177,18 @@ class Ui_StereoCalibPage(object):
     self.verticalLayout_2.setObjectName("verticalLayout_2")
     self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
     self.horizontalLayout_2.setObjectName("horizontalLayout_2")
-    self.button_next_image = QtWidgets.QPushButton(StereoCalibPage)
-    font = QtGui.QFont()
-    font.setPointSize(14)
-    self.button_next_image.setFont(font)
-    self.button_next_image.setObjectName("button_next_image")
-    self.horizontalLayout_2.addWidget(self.button_next_image)
     self.button_prev_image = QtWidgets.QPushButton(StereoCalibPage)
     font = QtGui.QFont()
     font.setPointSize(14)
     self.button_prev_image.setFont(font)
     self.button_prev_image.setObjectName("button_prev_image")
     self.horizontalLayout_2.addWidget(self.button_prev_image)
+    self.button_next_image = QtWidgets.QPushButton(StereoCalibPage)
+    font = QtGui.QFont()
+    font.setPointSize(14)
+    self.button_next_image.setFont(font)
+    self.button_next_image.setObjectName("button_next_image")
+    self.horizontalLayout_2.addWidget(self.button_next_image)
     self.verticalLayout_2.addLayout(self.horizontalLayout_2)
     self.verticalLayout = QtWidgets.QVBoxLayout()
     self.verticalLayout.setObjectName("verticalLayout")
@@ -292,9 +292,9 @@ class Ui_StereoCalibPage(object):
         "</style></head><body style=\" font-family:\'Sans Serif\'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
         "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p></body></html>"
       ))
-    self.button_next_image.setText(
-      _translate("StereoCalibPage", " Prev Image "))
     self.button_prev_image.setText(
+      _translate("StereoCalibPage", " Prev Image "))
+    self.button_next_image.setText(
       _translate("StereoCalibPage", " Next Image "))
     self.button_load_images.setText(
       _translate("StereoCalibPage", "Load Images"))

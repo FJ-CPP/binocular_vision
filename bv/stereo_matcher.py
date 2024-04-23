@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.colors import Normalize
 from scipy.ndimage import median_filter
 import os
 from .utils import timecost, load_pfm, save_pfm
@@ -39,7 +40,7 @@ class DisparityMap:
 
   @timecost
   def trans2color(self, vmin=20, vmax=150) -> np.array:
-    """ transform disparity map to color map
+    """ transform disparity map to color map (RGB)
 
     Args:
         vmin (int, optional): min value. Defaults to 20.
@@ -48,11 +49,9 @@ class DisparityMap:
     Returns:
         np.array: color disparity map data
     """
-    plt.imsave('color.png', self.raw(), cmap='jet', vmin=vmin, vmax=vmax)
-    color_data = cv2.imread('color.png')
-    cv2.cvtColor(color_data, cv2.COLOR_BGR2RGB, color_data)
-    os.remove('color.png')
-
+    norm_data = Normalize(vmin=vmin, vmax=vmax)(self.raw())
+    color_data = plt.cm.jet(norm_data)
+    color_data = (color_data[:, :, :3] * 255).astype(np.uint8)
     return color_data
 
   @timecost

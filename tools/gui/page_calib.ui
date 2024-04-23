@@ -347,7 +347,7 @@ p, li { white-space: pre-wrap; }
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_2">
          <item>
-          <widget class="QPushButton" name="button_next_image">
+          <widget class="QPushButton" name="button_prev_image">
            <property name="font">
             <font>
              <pointsize>14</pointsize>
@@ -359,7 +359,7 @@ p, li { white-space: pre-wrap; }
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="button_prev_image">
+          <widget class="QPushButton" name="button_next_image">
            <property name="font">
             <font>
              <pointsize>14</pointsize>
