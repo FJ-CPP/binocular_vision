@@ -16,7 +16,7 @@ powershell -command "Expand-Archive -Path 'all.zip' -DestinationPath '.'"
 del "all.zip"
 
 REM Move the files up from the 'data' subdirectory and remove it
-move "data\*.*" "."
+powershell -command "move 'data\*' '.'"
 rmdir /s /q "data"
 
 REM Navigate back to the original directory
