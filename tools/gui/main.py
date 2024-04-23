@@ -34,7 +34,6 @@ class BVApp(UIBasePage, Ui_HomePage):
   def init_ui(self):
     super().__init__()
     self.setupUi(self)
-    self.setFixedSize(self.width(), self.height())
     self.move_to_center()
 
   def init_slots(self):
