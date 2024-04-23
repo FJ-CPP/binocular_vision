@@ -12,7 +12,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_HomePage(object):
   def setupUi(self, HomePage):
     HomePage.setObjectName("HomePage")
-    HomePage.resize(301, 209)
+    HomePage.resize(296, 191)
     font = QtGui.QFont()
     font.setPointSize(9)
     font.setStyleStrategy(QtGui.QFont.PreferAntialias)
@@ -21,9 +21,10 @@ class Ui_HomePage(object):
     self.verticalLayout_2.setObjectName("verticalLayout_2")
     self.lable_app_title = QtWidgets.QLabel(HomePage)
     font = QtGui.QFont()
-    font.setPointSize(16)
+    font.setPointSize(13)
     font.setStyleStrategy(QtGui.QFont.PreferAntialias)
     self.lable_app_title.setFont(font)
+    self.lable_app_title.setAlignment(QtCore.Qt.AlignCenter)
     self.lable_app_title.setObjectName("lable_app_title")
     self.verticalLayout_2.addWidget(self.lable_app_title)
     spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum,
